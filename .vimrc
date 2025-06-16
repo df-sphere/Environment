@@ -1280,7 +1280,7 @@ function! SetColors()
   hi Constant       ctermfg=196
   hi Boolean        ctermfg=226
   hi Statement      ctermfg=76
-  hi Operator       ctermfg=70
+  hi Operator       ctermfg=76
   hi Type           ctermfg=226
   if !&diff
     hi cCustomScopes  ctermfg=219
@@ -1291,7 +1291,7 @@ function! SetColors()
   hi cppStructure   ctermfg=76
   hi VimGroup       ctermfg=214
   hi VimHiGroup     ctermfg=214
-  hi VimCommand     ctermfg=70
+  hi VimCommand     ctermfg=76
   hi VimFuncBody    ctermfg=253
   hi LineNr         ctermfg=251
   hi DiffAdd        ctermfg=80  ctermbg=237  
@@ -1378,7 +1378,7 @@ endf
 
 function SetEvening()
   call SetColors()
-  hi Normal ctermbg=232
+  hi Normal ctermbg=0
   hi Normal ctermfg=254
   hi Comment ctermfg=248
 endf
