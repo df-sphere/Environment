@@ -1278,9 +1278,13 @@ function! SetColors()
   syn match cCustomScopes  "\w\+\s*::" contains=cCustomScope
 
   hi Constant       ctermfg=196
+  hi Boolean        ctermfg=226
+  hi Statement      ctermfg=76
   hi Operator       ctermfg=70
   hi Type           ctermfg=226
-  hi cCustomScopes  ctermfg=219
+  if !&diff
+    hi cCustomScopes  ctermfg=219
+  endif
   hi cPreCondit     ctermfg=196
   hi cDefine        ctermfg=196
   hi cInclude       ctermfg=208
@@ -1290,9 +1294,9 @@ function! SetColors()
   hi VimCommand     ctermfg=70
   hi VimFuncBody    ctermfg=253
   hi LineNr         ctermfg=251
-  hi DiffAdd        ctermfg=10  ctermbg=237  
+  hi DiffAdd        ctermfg=80  ctermbg=237  
   hi DiffDelete     ctermfg=9   ctermbg=237  
-  hi DiffChange     ctermfg=250 ctermbg=237  
+  hi DiffChange     ctermfg=253 ctermbg=237  
   hi DiffText       ctermfg=207 ctermbg=237  
   ""hi DiffAdd        ctermfg=10 ctermbg=237 cterm=bold 
   ""hi DiffDelete     ctermfg=9  ctermbg=237 cterm=bold 
