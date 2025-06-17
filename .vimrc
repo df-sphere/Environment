@@ -274,9 +274,7 @@ nnoremap term :botright terminal<CR>
 " opens terminal at tab 0
 function! OpenTerminalTab() abort
   execute "tab ter"
-  execute "normal!<C-W>N"
   execute "tabm0"
-  execute "normal!i"
 endfunction
 
 nnoremap tterm :call OpenTerminalTab()<CR>
@@ -315,6 +313,7 @@ endfunction
 
 nnoremap <silent> <Leader>t :call <SID>ToggleTerminal()<CR>
 nnoremap <silent> <Leader>t <C-w>N:call <SID>ToggleTerminal()<CR>
+autocmd BufEnter term://* setlocal modifiable
 
 " Place all swap '.swp' files in specific directory. Avoids swap files being
 " spread across filesystem.
@@ -416,6 +415,68 @@ noremap to :exe "normal \<S-o>" <CR>
 noremap tc :tabclose <CR>
 " Gitv tab open, syntax off for better diff readability
 noremap go :exe "normal \<S-o>" <CR> :syntax off <CR>
+
+"map numbers to tab, e.g. .7
+for i in range(1, 9)
+  execute 'nnoremap <silent> .' . i . ' ' . i . 'gt'
+  execute 'nnoremap <silent> z' . i . ' ' . i . 'gt'
+endfor
+
+noremap <C-n> gT
+noremap <C-m> gt
+noremap <C-f> gT
+noremap <C-g> gt
+
+"switch tabs from terminal
+tnoremap <C-n> <C-\><C-N>gT
+tnoremap <C-m> <C-\><C-N>gt
+tnoremap <C-f> <C-\><C-N>gT
+tnoremap <C-g> <C-\><C-N>gt
+
+let g:last_buftype = 'normal'
+
+function! OnTabEnter()
+  if &buftype == 'terminal'
+    if g:last_buftype != 'terminal'
+      " Only if coming from a non-terminal buffer
+      call feedkeys("i", 'n') " Enter terminal mode (insert mode for terminal)
+    endif
+  endif
+  let g:last_buftype = &buftype
+endfunction
+
+augroup TerminalTabSwitch
+  autocmd!
+  autocmd TabEnter * call OnTabEnter()
+augroup END
+
+function! TabName()
+  let s = ''
+  for i in range(1, tabpagenr('$'))
+    if i == tabpagenr()
+      let s .= '%#TabLineSel#'
+    else
+      let s .= '%#TabLine#'
+    endif
+    let s .= '%' . i . 'T'
+    let s .= ' %{MyTabLabel(' . i . ')} '
+  endfor
+  let s .= '%#TabLineFill#%T'
+  if tabpagenr('$') > 1
+    let s .= '%=%#TabLine#%999Xclose'
+  endif
+  return s
+endfunction
+
+function! MyTabLabel(n)
+  let buflist = tabpagebuflist(a:n)
+  let winnr = tabpagewinnr(a:n)
+  let filename = bufname(buflist[winnr - 1])
+  return a:n . '. ' . fnamemodify(filename, ':t')
+endfunction
+
+set tabline=%!TabName()
+set showtabline=2  " Always show the tab bar
 
 " syntax can be off when opening with 'go'"
 autocmd BufLeave * syntax on
@@ -1253,8 +1314,10 @@ function! SetColorsOther()
   hi cDefine ctermfg=104
   hi cInclude ctermfg=208
   hi cppStructure ctermfg=70
+  hi VimAuGroup ctermfg=214
   hi VimGroup ctermfg=214
   hi VimHiGroup ctermfg=214
+  hi VimIsCommand ctermfg=70
   hi VimCommand ctermfg=70
   hi VimFuncBody ctermfg=253
   hi LineNr ctermfg=240
@@ -1281,6 +1344,7 @@ function! SetColors()
   hi Boolean        ctermfg=226
   hi Statement      ctermfg=76
   hi Operator       ctermfg=76
+  hi Special ctermfg=171
   hi Type           ctermfg=226
   if !&diff
     hi cCustomScopes  ctermfg=219
@@ -1289,8 +1353,10 @@ function! SetColors()
   hi cDefine        ctermfg=196
   hi cInclude       ctermfg=208
   hi cppStructure   ctermfg=76
+  hi VimAuGroup ctermfg=214
   hi VimGroup       ctermfg=214
   hi VimHiGroup     ctermfg=214
+  hi VimIsCommand ctermfg=76
   hi VimCommand     ctermfg=76
   hi VimFuncBody    ctermfg=253
   hi LineNr         ctermfg=251
@@ -1511,6 +1577,15 @@ let g:gcov_marker_auto_lopen = 0
 "===============================================================================
 inoremap jk <Esc>:wa!<CR>
 inoremap fd <Esc>:wa!<CR>
+
+"===============================================================================
+"// Last commands
+"===============================================================================
+" make sure when hitting enter in terminal mode it does not change tabs,
+" instead just works as regular enter, needs to be the last command as there
+" is a mapping somwhere that needs to be investigated, even though 
+" :verbose tmap <CR> shows empty
+silent! tunmap <CR>
 
 "===============================================================================
 "// TODO
