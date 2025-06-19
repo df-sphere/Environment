@@ -36,17 +36,8 @@ Plugin 'rhysd/vim-grammarous'
 " LanguageTool grammar check
 Plugin 'vim-scripts/LanguageTool'
 
-" vimux, vim and tmux plugin
-""Plugin 'benmills/vimux'
-
 " highlight words and press '*' to find match
 Plugin 'nelstrom/vim-visual-star-search'
-
-" vimux, vim and tmux plugin.
-"   If copying .vim directory and not installing via Vundle, run once:
-"   $cd ~/.vim/bundle/vim-tmux-navigator
-"   $./vim-tmuxvim-tmux-navigator.tmux
-""Plugin 'christoomey/vim-tmux-navigator'
 
 " gitkv plugin
 Plugin 'gregsexton/gitv'
@@ -63,7 +54,7 @@ Plugin 'airblade/vim-gitgutter'
 " improved make command
 Plugin 'tpope/vim-dispatch'
 
-Plugin 'yssl/QFEnter'
+""Plugin 'yssl/QFEnter'
 
 " LSP config
 Plugin 'prabirshrestha/vim-lsp'
@@ -114,8 +105,6 @@ Plugin 'altercation/vim-colors-solarized'
 "   install:
 "   - $sudo apt-get install w3m w3m-img // xterm supports images
 "   - copy the ~/.w3m/keymap to new user account
-
-" copy to clipboard, works between guake and tmux buffers
 "   sudo apt-get install vim-gtk
 
 call vundle#end()
@@ -563,69 +552,6 @@ function! SetRunTests()
   let &makeprg='(cd ~/Development/AFSSbuild && ./run.sh)'
 endfunction
 
-" opens tmux split and shows the compilation and run of tests
-noremap <silent> tb :call SetBuildProject() <CR> :Make <CR>
-noremap <silent> tm :call SetMakeProject() <CR> :Make <CR>
-noremap <silent> tr :call SetRunTests() <CR> :Make <CR>
-
-" does not open tmux split and shows the compilation and run of tests
-noremap <silent> tbs :call SetBuildProject() <CR> :Make! <CR>
-noremap <silent> tms :call SetMakeProject() <CR> :Make! <CR>
-noremap <silent> trs :call SetRunTests() <CR> :Make! <CR>
-" open window with results
-noremap <silent> two :Copen <CR>
-
-"===============================================================================
-"// Vimmux
-"===============================================================================
-" for all the below noremap it will open automatically a tmux window if there
-" are none opened
-
-" windows properties
-let g:VimuxHeight = "15"
-let g:VimuxOrientation = "v"
-" use existing window if found instead of opening a new one
-let g:VimuxUseNearest = "15"
-
-" open web pages
-noremap tc++ :call VimuxRunCommand("w3m http://en.cppreference.com/w/Main_Page")<CR>
-noremap tgoogle :call VimuxRunCommand("w3m http://www.google.com")<CR>
-
-function! s:Google(word)
-  let l:word = "w3m http://www.google.com/search?q='".a:word."'"
-  execute "VimuxRunCommand(l:word)"
-endfunction
-
-" googles a specific value
-" :Google <value>, i.e. :Google news
-command! -nargs=1 Google call s:Google(<f-args>)
-
-function! GoogleSelection()
-  let l:selection = s:GetVisualSelection()
-  call s:Google(l:selection)
-endfunction
-
-" Google words highlighted on vim
-noremap <silent> tgs :call GoogleSelection() <CR>
-
-" run command in another tmux
-noremap <silent> td :VimuxPromptCommand<CR>
-
-" close window opened by tmux
-noremap <silent> tq :VimuxCloseRunner<CR>
-
-" close tmux window if closing im
-autocmd VimLeave * VimuxCloseRunner
-
-"===============================================================================
-"// Vimux navigator
-"===============================================================================
-"nnoremap <silent> <C-h> :TmuxNavigateLeft<CR>
-"nnoremap <silent> <C-j> :TmuxNavigateDown<CR>
-"nnoremap <silent> <C-k> :TmuxNavigateUp<CR>
-"nnoremap <silent> <C-l> :TmuxNavigateRight<CR>
-"nnoremap <silent> <C-\> :TmuxNavigatePrevious<CR>
-
 "===============================================================================
 "// Clang autocomplete
 "===============================================================================
@@ -964,63 +890,58 @@ noremap <silent> ;diffupdate :GitGutterAll <CR>
 "===============================================================================
 "// Git
 "===============================================================================
-" gs         // status
-" :Gd <args> // diff with two branches
-" gd         // diff
-" gdc        // cached
-" gdu        // upstream
-" gdm        // origin/master
-" ;u         // diff update, when changes are done in diff to update changes
-" ;z         // save new changes in diff and close tabs, use with gdiff
+nnoremap <silent> gd :call RunGitGd('gd')<CR>
+nnoremap <silent> gdx :call RunGitGdx('gd')<CR>
+nnoremap <silent> gc :call RunGitGd('gc')<CR>
+nnoremap <silent> gcx :call RunGitGdx('gc')<CR>
+nnoremap <silent> gm :call RunGitGdx('gm')<CR>
+nnoremap <silent> gmx :call RunGitGdx('gm')<CR>
+nnoremap <silent> gu :call RunGitGdx('gu')<CR>
+nnoremap <silent> gux :call RunGitGdx('gu')<CR>
+noremap <silent> gs :call GitStatus() <CR>
+noremap <silent> gfa :call GitFetchAll() <CR>
+noremap <silent> ga :call GitAddCurrentFile() <CR>
+noremap <silent> gcvs :call GitCommit() <CR>
+noremap <silent> gca :call GitAmend() <CR>
+command! -nargs=* Gn call RunGitGd(<f-args>)
+command! -nargs=* Gnx call RunGitGdx(<f-args>)
+" save new changes in diff buffers and close them
+noremap ;z :w!<CR> :qa <CR>
 
-" change color scheme when doing gitdiff
 if &diff
   colorscheme koehler
 endif
 
+function! GitCommit()
+  execute "!git commit -vs"
+endfunction
+
+function! GitAmend()
+  execute "!git commit --amend"
+endfunction
+
 function! GitStatus()
-  VimuxRunCommand("git status")
+  execute "!git status"
 endfunction
 
-function! GitDiffFiles(branches)
-  " show diff files list
-  VimuxRunCommand("git diff --name-only ".a:branches)
-  " run diff
-  exe "silent !git difftool --tool=vimdiff ".a:branches
+function! GitFetchAll()
+  silent execute "!git fetch --all"
+  redraw!
 endfunction
 
-function! GitDiffFilesRemote()
-  " get remote branch name, the local branch must have set an upstream. It can
-  " be set as git --set-upstream-to <remote> or git push -u origin <branch_name>
-  let l:remote_branch = system('git rev-parse --abbrev-ref --symbolic-full-name @{u}')
-  call GitDiffFiles(l:remote_branch)
+function! SaveCurrentFile()
+  silent execute "wa"
 endfunction
 
-" git status
-noremap <silent> gs :call GitStatus() <CR>
-
-" diff with branches
-command -nargs=1 Gd call GitDiffFiles(<f-args>)
-
-" opens vimdiff showing tabs for each file, see ~/.gitconfig for 'dt' command
-""noremap <silent> gd :call GitStatus() <CR> :!git dt <CR>
-
-" diff index
-" vimscript only allows to call one command from from command line, i.e.
-" vim -c \"exe 'normal gd'", gd mapping must have only one call
-noremap <silent> gd :call GitDiffFiles(".") <CR>
-
-" diff cached
-noremap <silent> gdc :call GitDiffFiles("--cached") <CR>
-
-" diff upstream
-noremap <silent> gdu :call GitDiffFilesRemote() <CR>
-
-" diff master
-noremap <silent> gdm :call GitDiffFiles("remotes/origin/master") <CR>
-
-" git add
-noremap ga :Gwrite <CR> :call GitStatus() <CR>
+function! GitAddCurrentFile()
+  let l:file = expand('%')
+  if empty(l:file)
+    echom "No file to add"
+    return
+  endif
+  silent execute '!git add ' . shellescape(l:file)
+  redraw!
+endfunction
 
 " Vim attempts to keep the differences updated when you make changes to the
 " text.  This mostly takes care of inserted and deleted lines.  Changes within a
@@ -1028,123 +949,156 @@ noremap ga :Gwrite <CR> :call GitStatus() <CR>
 " be updated use:
 noremap <silent> ;du :diffupdate <CR>
 
-" save new changes in diff buffers and close them
-noremap ;z :w!<CR> :qa <CR>
-
-"===============================================================================
-"// Custom diff
-"===============================================================================
-" :Gdd <args> // diff with specific branch
-" :Gddna      // diff with no arguments
-" gdd         // diff with index
-" gddc        // diff with cached
-" gddu        // diff with upstream
-" gddm        // diff with master
-" ;u          // diff update, update changes in screen
-" ;z          // save new changes in diff and close tabs, use with gdiff
-" ;q          // refresh quickfix window when there's only one record, allows
-"             // to view diff for than once for one record output
-
-" populates quickfix window
-function! SetQfCommitList(...)
-  "get the commit hash if it was specified
-  let commit = a:0 == 0 ? '' : a:1
-
-  " get the result of git show in a list
-  let git_list = system('git diff --name-only --pretty=oneline '.commit)
-  let flist = split(git_list, '\n')
-
-  " create the dictionaries used to populate the quickfix list
-  let list = []
-  let l:num = 0
-
-  " get absolute path to repo to append to filename
-  let absolute_path = system('git rev-parse --show-toplevel')
-  " variable has carriage return at the end, remove
-  let l:absolute_path = substitute(l:absolute_path, "\n", "", "")
-
-  for f in flist
-    let l:num = l:num + 1
-    "let dic = {'bufnr': '', 'lnum' : l:num, 'text' : 'entry'}
-    "let dic = {'filename': absolute_path.'/'.f, 'lnum' : l:num, 'text' : '.'}
-    let dic = {'filename': f, 'lnum' : l:num, 'text' : '.'}
-    call add(list, dic)
-  endfor
-
-  " populate the qf list
-  " :call setqflist([{'bufnr': bufnr(''), 'lnum': 42, 'text': 'entry'}], 'a')
-  " http://vimdoc.sourceforge.net/htmldoc/usr_41.html // find references for
-  "                                                   // location list
-  call setqflist(list)
-  "call setloclist(1, list)
-endfunction'
-
-function SetDiffDirectory(commit)
-  " enable autocommands
-  augroup DiffGroup
-    autocmd!
-    autocmd BufRead * call DiffDirectory()
-    "only remaps enter in quickfix buffer, not in other buffers
-    autocmd BufReadPost quickfix nnoremap <silent> <buffer> <CR> :call SetOneDiff() <CR><CR>
-  augroup END
-
-  let s:commit = a:commit
-  call SetQfCommitList(s:commit)
-
-  " open quickfix window to occupy all screen"
-  exe "copen"
-
-  " define variable to interact with enter key"
-  " this variable must be defined after 'copen' command, otherwise it'll open
-  " diff when opening the quickfix window by using the DiffGroup group commands
-  " (above)
-  let g:one_diff = ""
+function! GetGitBranch()
+  " Get the parent directory of the current file
+  let l:dir = expand('%:p:h')
+  " Get current git branch, suppressing errors and trimming whitespace
+  let l:branch = trim(system('git -C ' . shellescape(l:dir) . ' branch --show-current 2>/dev/null'))
+  return l:branch
 endfunction
 
-" run git diff
-function DiffDirectory()
-  if exists("g:one_diff")
-    let l:file_to_diff = expand('%')
-    exe "silent !git difftool --tool=vimdiff ".s:commit." -- ".l:file_to_diff
-    unlet g:one_diff
+function! IsGitRepo()
+  let l:gitroot = system('git rev-parse --show-toplevel 2>/dev/null')
+  return v:shell_error == 0
+endfunction
+
+function! GetGitCommand(git_diff, arg)
+  let l:staged = '.'
+  if a:arg == "gd" 
+    if a:git_diff == "git diff"
+        return [a:git_diff.' --name-only', l:staged]
+    else
+        return [a:git_diff, l:staged]
+    endif
+  endif
+
+  " note: vim has a bug, where I cannot use in the below if statements elif
+  " when adding it (elif) only the first comparison above works
+  if a:arg == "gc" 
+    let l:staged = "staged"
+    if a:git_diff == "git diff"
+        return [a:git_diff.' --cached --name-only', l:staged]
+    else
+        return [a:git_diff.' --cached', l:staged]
+    endif
+  endif
+
+  if a:arg == "gm"
+    if a:git_diff == "git diff"
+        return [a:git_diff.' origin/master --name-only', l:staged]
+    else
+        return [a:git_diff.' origin/master', l:staged]
+    endif
+  endif
+  
+  if a:arg == "gu"
+    GitFetchAll()
+    if a:git_diff == "git diff"
+        return [a:git_diff.' origin'.GetGitBranch().' --name-only', l:staged]
+    else
+        return [a:git_diff.' origin'.GetGitBranch(), l:staged]
+    endif
+  endif
+
+  if a:git_diff == "git diff"
+      return [a:git_diff.' '.a:arg.' --name-only', l:staged]
+  else
+      return [a:git_diff.' '.a:arg, l:staged]
   endif
 endfunction
 
-" variable to run again diff when pressing enter in QF buffer
-function SetOneDiff()
-  let g:one_diff = ""
+function! GetDiffFilenames(command, label)
+  call SaveCurrentFile()
+  let l:git_output = systemlist(a:command)
+  let l:repo_root = systemlist('git rev-parse --show-toplevel')[0]
+  let g:git_diff_qf_list = []
+
+  for l:filename in l:git_output
+    let l:filename = trim(l:filename)
+    let l:absolute_path = fnamemodify(l:repo_root . '/' . l:filename, ':p')
+    if filereadable(l:absolute_path)
+      call add(g:git_diff_qf_list, {
+            \ 'filename': l:absolute_path,
+            \ 'lnum': 1,
+            \ 'col': 1,
+            \ 'text': a:label 
+            \ })
+    endif
+  endfor
 endfunction
 
-function! SetDiffDirectoryRemote()
-  " get remote branch name, the local branch must have set an upstream. It can
-  " be set as git --set-upstream-to <remote> or git push -u origin <branch_name>
-  let l:remote_branch = system('git rev-parse --abbrev-ref --symbolic-full-name @{u}')
+function! IsValid(arg)
+  if (!IsGitRepo()) 
+    echom "not a git repo"
+    return v:false 
+  endif
 
-  " variable has carriage return at the end, remove
-  let l:remote_branch = substitute(l:remote_branch, "\n", "", "")
+  let l:command_stage = GetGitCommand('git diff', a:arg)
+  call GetDiffFilenames(l:command_stage[0], l:command_stage[1])
+  if !exists('g:git_diff_qf_list') || empty(g:git_diff_qf_list)
+    echom "empty files to diff"
+    return v:false 
+  endif
 
-  call SetDiffDirectory(l:remote_branch)
+  return v:true 
 endfunction
 
-" diff branches
-command! -nargs=1 Gdd call SetDiffDirectory(<f-args>)
+function! RunGitGd(arg)
+  if !IsValid(a:arg)
+    return
+  endif
+  let l:command_stage = GetGitCommand('git difftool', a:arg)
+  silent execute "!".l:command_stage[0]
+  redraw!
+endfunction
 
-" diff index
-noremap <silent> gdd :call SetDiffDirectory("") <CR>
+function! RunGitGdx(arg)
+  if !IsValid(a:arg)
+    return
+  endif
+  let g:command_stage = GetGitCommand('git difftool', a:arg)
+  call setqflist(g:git_diff_qf_list, 'r')
+  copen
+endfunction
 
-" diff cached
-noremap <silent> gddc :call SetDiffDirectory("--cached") <CR>
+augroup GitDiffQFEnter
+  autocmd!
+  autocmd FileType qf call s:MapGitQFEnter()
+augroup END
 
-" diff upstream
-noremap <silent> gddu :call SetDiffDirectoryRemote() <CR>
+function! s:MapGitQFEnter()
+  nnoremap <silent><buffer> <CR> :call ShowGitDiffFromQF()<CR>
+endfunction
 
-" diff master
-noremap <silent> gddm :call SetDiffDirectory("remotes/origin/master") <CR>
+function! ShowGitDiffFromQF()
+  if !exists('g:git_diff_qf_list') || empty(g:git_diff_qf_list)
+    echom "empty files to diff"
+    return
+  endif
 
-" close and open quickfix window, needed when there's only one record left in
-" buffer, the use press enter to view diff and then comes back which does not
-" allow to enter again the diff'"
-noremap <silent> ;q :close <CR> :copen <CR>
+  if !exists('g:command_stage')
+    throw "missing variable"
+  endif
+
+  let l:idx = line('.') - 1
+  if l:idx < 0 || l:idx >= len(g:git_diff_qf_list)
+    throw "Invalid index"
+  endif
+
+  let l:item = g:git_diff_qf_list[l:idx]
+  let l:file = get(l:item, 'filename', '')
+  if empty(l:file) || !filereadable(l:file)
+    return
+  endif
+
+  let l:label = get(l:item, 'text', '')
+  if l:label == "staged"
+    silent execute "!".g:command_stage[0] . " --cached HEAD -- " . l:file
+  else 
+    silent execute "!".g:command_stage[0] . " -- " . l:file
+  endif
+  redraw!
+endfunction
 
 "===============================================================================
 "// Gitk
@@ -1271,14 +1225,6 @@ noremap <silent> .std :call SearchStdSelection() <CR>
 "===============================================================================
 "// Vim colors
 "===============================================================================
-
-"install:
-"tmux solarized"
-"https://github.com/seebi/tmux-colors-solarized"
-
-"guake colors"
-"https://github.com/ziyenano/Guake-Color-Schemes
-
 ""solarized for command line, use insted guake colors
 ""http://www.webupd8.org/2011/04/solarized-must-have-color-paletter-for.html
 
@@ -1606,3 +1552,9 @@ silent! tunmap <CR>
 "instrumentation and sampling profiler / benchmark
 "have local_vimrc for different projects
 
+"pending"
+"- Language server
+"- cgrep
+"- run binary async and return automatically to code with status of result
+"- vim gdb instructions
+"
