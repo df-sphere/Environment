@@ -28,7 +28,7 @@ Plugin 'vim-airline/vim-airline'
 Plugin 'vim-airline/vim-airline-themes'
 
 " gdb debugger
-Plugin 'vim-scripts/Conque-GDB'
+""Plugin 'vim-scripts/Conque-GDB'
 
 " Grammarous grammar check
 Plugin 'rhysd/vim-grammarous'
@@ -53,6 +53,8 @@ Plugin 'airblade/vim-gitgutter'
 
 " improved make command
 Plugin 'tpope/vim-dispatch'
+
+Plugin 'github/copilot.vim'
 
 ""Plugin 'yssl/QFEnter'
 
@@ -383,6 +385,12 @@ function! DisableExpandFold()
 endfunction
 
 noremap <silent> ;f :call ExpandFold() <CR>
+
+"===============================================================================
+"// Github copilot
+"===============================================================================
+"imap <silent><script><expr> <C-J> copilot#Accept("\<CR>")
+"let g:copilot_no_tab_map = v:true
 
 "===============================================================================
 "// Supertab, linux-like autocompletion when pressing tab
