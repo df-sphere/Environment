@@ -1408,6 +1408,10 @@ function! HighlightOverLength()
  endif
 endfunction
 
+syntax enable
+set background=dark
+colorscheme solarized
+
 " call HighlightOverLength()
 
 " Highlight trailing whitespaces in the file
