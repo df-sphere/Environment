@@ -1318,6 +1318,7 @@ function! SetColors()
   hi DiffDelete     ctermfg=9   ctermbg=237  
   hi DiffChange     ctermfg=253 ctermbg=237  
   hi DiffText       ctermfg=207 ctermbg=237  
+  hi CopilotSuggestion ctermfg=248
   ""hi DiffAdd        ctermfg=10 ctermbg=237 cterm=bold 
   ""hi DiffDelete     ctermfg=9  ctermbg=237 cterm=bold 
   ""hi DiffChange     ctermfg=11 ctermbg=237 cterm=bold 

@@ -263,5 +263,6 @@ unset __conda_setup
 # <<< conda initialize <<<
 
 #export DISPLAY="localhost:10.0"
-export PATH=~/amrnd/bin:/usr/local/bin:$PATH
+#export PATH=~/amrnd/bin:/usr/local/bin:$PATH
+export PATH=~/amrnd/bin:$PATH
 
