@@ -338,8 +338,12 @@ noremap ..q :q! <CR>
 "===============================================================================
 "// Run
 "===============================================================================
-" for vim7 or earlier change RunAsync to RunSync in RunOutputTab and
+" - For vim7 or earlier change RunAsync to RunSync in RunOutputTab and
 "   RunOutputSplit 
+" - The project directory must have .vimlocal as follows:
+"   $cat .vimlocal
+"   let g:project_run_command = './zrun.sh'
+"   "let g:project_out_file = 'out'
 nnoremap .t : call RunOutputTab()<CR>
 nnoremap .s : call RunOutputSplit('h')<CR>
 nnoremap .v :call RunOutputSplit('v')<CR>
@@ -481,12 +485,14 @@ endif
 
 " ===========================================================
 function! RunOutputTab()
+  echo 'starting run'
   let outfile = GetOutFile()
   call RunAsync()
   call TabOpenOrRefresh(outfile)
 endfunction
 
 function! RunOutputSplit(direction)
+  echo 'starting run'
   let outfile = GetOutFile()
   call RunAsync()
   call SplitOpenOrRefresh(outfile, a:direction)
