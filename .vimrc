@@ -336,6 +336,173 @@ set noswapfile
 noremap ..q :q! <CR>
 
 "===============================================================================
+"// Run
+"===============================================================================
+" for vim7 or earlier change RunAsync to RunSync in RunOutputTab and
+"   RunOutputSplit 
+nnoremap .t : call RunOutputTab()<CR>
+nnoremap .s : call RunOutputSplit('h')<CR>
+nnoremap .v :call RunOutputSplit('v')<CR>
+nnoremap .c :call CloseOutputSplit()<CR>
+nnoremap .x :call CloseOutputTab()<CR>
+
+if filereadable('.vimlocal')
+  source .vimlocal
+endif
+
+if !exists('g:project_run_command')
+  let g:project_run_command = './run.sh'
+endif
+if !exists('g:project_out_file')
+  let g:project_out_file = 'out'
+endif
+
+function! GetOutFile()
+  return g:project_out_file
+endfunction
+
+function! GetOutputBuffer()
+  let bufnr = bufnr(GetOutFile())
+  if bufnr ==# -1
+    return v:null
+  endif
+  return bufnr
+endfunction
+
+function! GetOutputWindow()
+  let bnr = GetOutputBuffer()
+  if bnr ==# v:null
+    return -1
+  endif
+  return bufwinnr(bnr)
+endfunction
+
+function! GetOutputTab()
+  let bnr = GetOutputBuffer()
+  if bnr ==# v:null
+    return -1
+  endif
+  for i in range(tabpagenr('$'))
+    execute 'tabnext' (i + 1)
+    if bufwinnr(bnr) !=# -1
+      return i + 1
+    endif
+  endfor
+  return -1
+endfunction
+
+function! TabOpenOrRefresh(outfile)
+  if filereadable(a:outfile)   
+    let t = GetOutputTab()
+    if t !=# -1
+      execute 'tabnext' t
+      " CHANGE: Use silent edit! and redraw|echon for one-line status
+      silent edit!
+      redraw | echon 'done: ' . a:outfile . ' refreshed in tab'
+    else
+      silent tabnew `=a:outfile`
+      redraw | echon 'done: ' . a:outfile . ' opened in new tab'
+    endif
+  endif
+endfunction
+
+" direction: 'h' or 'v'
+function! SplitOpenOrRefresh(outfile, direction)
+  if filereadable(a:outfile)   
+    let w = GetOutputWindow()
+    if w !=# -1
+      execute w . 'wincmd w'
+      silent edit!
+      redraw | echon 'done: ' . a:outfile . ' refreshed in split'
+      return
+    endif
+    let current = bufnr('%')
+    if a:direction ==# 'h'
+      set splitbelow
+      silent split `=a:outfile`
+      set nosplitbelow
+      redraw | echon 'done: ' . a:outfile . ' opened in horizontal split (bottom)'
+    elseif a:direction ==# 'v'
+      set splitright
+      silent vsplit `=a:outfile`
+      set nosplitright
+      redraw | echon 'done: ' . a:outfile . ' opened in vertical split (right)'
+    endif
+  endif
+endfunction
+
+function! CloseOutputSplit()
+  let bnr = GetOutputBuffer()
+  if bnr ==# v:null
+    echom "Output file not open."
+    return
+  endif
+  let closed = 0
+  windo if bufnr('%') ==# bnr | close | let closed += 1 | endif
+  redraw | echon 'done: closed ' . closed . ' window(s) showing ' . GetOutFile()
+endfunction
+
+function! CloseOutputTab()
+  let bnr = GetOutputBuffer()
+  if bnr ==# v:null
+    echom "Output file not open."
+    return
+  endif
+  let closed = 0
+  for tnr in range(tabpagenr('$'), 1, -1)
+    execute 'tabnext' tnr
+    if bufwinnr(bnr) !=# -1
+      tabclose
+      let closed += 1
+    endif
+  endfor
+  redraw | echon 'done: closed ' . closed . ' tab(s) showing ' . GetOutFile()
+endfunction
+
+" ====================== Command runners ======================
+" Sync runner: always works, blocks until complete, use in Vim 7 or earlier
+function! RunSync(outfile)
+  silent! execute '!' . g:project_run_command . ' > ' . a:outfile . ' 2>&1 < /dev/null'
+endfunction
+
+" Async runner: only on Vim 8+
+if has('job') && has('channel')
+  function! s:JobDone(...)
+    " Status will be shown after the user chooses to open/refresh with mappings.
+  endfunction
+
+  function! RunAsync()
+    let outfile = GetOutFile()
+    let cmd = g:project_run_command . ' > ' . outfile . ' 2>&1'
+    let job = job_start(cmd, {'close_cb': 's:JobDone'})
+    redraw | echon 'job started (async)'
+  endfunction
+endif
+
+" ===========================================================
+function! RunOutputTab()
+  let outfile = GetOutFile()
+  call RunAsync()
+  call TabOpenOrRefresh(outfile)
+endfunction
+
+function! RunOutputSplit(direction)
+  let outfile = GetOutFile()
+  call RunAsync()
+  call SplitOpenOrRefresh(outfile, a:direction)
+endfunction
+
+function! s:EchoProjectVars()
+  echohl Question
+  echom "Project command: " . g:project_run_command
+  echom "Output file:     " . g:project_out_file
+  echohl None
+endfunction
+
+" Optional: Print current project config on startup
+" autocmd VimEnter * call <SID>EchoProjectVars()
+
+"===============================================================================
 "// Fold
 "===============================================================================
 " fold code
