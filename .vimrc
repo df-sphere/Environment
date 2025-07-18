@@ -517,6 +517,92 @@ endfunction
 " autocmd VimEnter * call <SID>EchoProjectVars()
 
 "===============================================================================
+"// Open file under line
+"===============================================================================
+ function! OpenFileUnderLine()
+  let line = getline('.')
+  let current = col('.') - 1
+
+  " Find the start of the path: scan left for a '/' OR stop at the first whitespace
+  let start = current
+  let found_slash = 0
+  while start >= 0
+    let char = line[start]
+    if char ==# '/' && start == 0
+      let found_slash = 1
+      break
+    elseif char =~# '\s'
+      " Only proceed if a '/' appears after this space!
+      let start += 1
+      while start < len(line) && line[start] !~# '/'
+        let start += 1
+      endwhile
+      if start < len(line) && line[start] ==# '/'
+        let found_slash = 1
+      else
+        echo "No file path with '/' found on this line"
+        return
+      endif
+      break
+    endif
+    let start -= 1
+  endwhile
+
+  if !found_slash
+    echo "No file path with '/' found on this line"
+    return
+  endif
+
+  " Now scan right from start to first whitespace (or end of line)
+  let end = start
+  while end < len(line) && line[end] !~# '\s'
+    let end += 1
+  endwhile
+
+  let candidate = strpart(line, start, end - start)
+
+  " Split into path and line number
+  let parts = split(candidate, ':')
+  let path = parts[0]
+  let lineno = (len(parts) > 1 && parts[1] =~# '^[0-9]\+$') ? str2nr(parts[1]) : 0
+
+  " The path must start with '/'
+  if path !~# '^/'
+    echohl ErrorMsg | echom "Path must start with '/': " . path | echohl None
+    return
+  endif
+
+  " Expand ~, resolve symlinks, and make absolute
+  let fullpath = resolve(expand(path))
+
+  "echo "Opening file: " . fullpath . (lineno > 0 ? " at line " . lineno : "")
+
+  " Only proceed if file is readable
+  if filereadable(fullpath)
+    let buf = bufnr(fullpath)
+    if buf != -1
+        let win = bufwinid(buf)
+        if win != -1
+          call win_gotoid(win)
+          normal! zz
+        else
+          exec 'buffer ' . buf
+        endif
+    else
+      exec 'edit ' . fnameescape(fullpath)
+    endif
+    if lineno > 0
+      exec lineno
+      normal! zz
+    endif
+  else
+    echohl ErrorMsg | echom "No readable file: " . fullpath | echohl None
+  endif
+endfunction
+
+nnoremap <silent> o :call OpenFileUnderLine()<CR>
+
+"===============================================================================
 "// Fold
 "===============================================================================
 " fold code
