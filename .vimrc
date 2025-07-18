@@ -484,17 +484,25 @@ if has('job') && has('channel')
 endif
 
 " ===========================================================
+function! SaveAllBuffers()
+  wa!
+endfunction
+
 function! RunOutputTab()
   echo 'starting run'
+  call SaveAllBuffers()
   let outfile = GetOutFile()
-  call RunAsync()
+  call RunSync(outfile)
+  "call RunAsync()
   call TabOpenOrRefresh(outfile)
 endfunction
 
 function! RunOutputSplit(direction)
   echo 'starting run'
+  call SaveAllBuffers()
   let outfile = GetOutFile()
-  call RunAsync()
+  call RunSync(outfile)
+  "call RunAsync()
   call SplitOpenOrRefresh(outfile, a:direction)
 endfunction
 
