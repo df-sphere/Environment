@@ -1688,8 +1688,8 @@ function! HighlightOverLength()
 endfunction
 
 syntax enable
-set background=dark
-colorscheme solarized
+""set background=dark
+""colorscheme solarized
 
 " call HighlightOverLength()
 
@@ -1800,6 +1800,11 @@ let g:gcov_marker_auto_lopen = 0
 
 " Command :lopen can be used to display the list of uncovered lines in the
 " location list.
+
+"===============================================================================
+"// Open vim in last line where it was closed
+"===============================================================================
+autocmd BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") && &ft !~# 'commit' | exe "normal! g`\"" | endif
 
 "===============================================================================
 "// Esc

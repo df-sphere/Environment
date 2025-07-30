@@ -181,6 +181,7 @@ alias condainfo="conda info --envs"
 alias gf="git show --name-only"
 alias gff="git show --pretty=%gd --stat"
 #alias cat="bat"
+alias ai="wsh ai"
 
 # must usse the --ip flag, otherwise will not be able to connect:
 alias jupyterlab="jupyter lab --ip 0.0.0.0 --port 8080"
