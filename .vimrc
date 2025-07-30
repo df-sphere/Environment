@@ -117,6 +117,36 @@ filetype plugin indent on
 "===============================================================================
 
 "===============================================================================
+"// Center file
+"===============================================================================
+let g:center_margin_width = 190
+let g:center_margin_file = '/tmp/set_center.vim'
+
+function! CenterWithMargin()
+    if winnr('$') == 1
+      \ && bufname('%') !=# g:center_margin_file
+      \ && filereadable(expand('%:p'))
+      \ && !&diff
+        if !filereadable(g:center_margin_file)
+          call writefile([], g:center_margin_file)
+        endif
+        execute 'vsplit ' . fnameescape(g:center_margin_file)
+        execute 'vertical resize ' . g:center_margin_width
+        wincmd H
+        " Move focus back to your file (now right window)
+        setlocal nonumber norelativenumber signcolumn=no
+        execute 'wincmd l'
+        execute 'vertical resize ' . g:center_margin_width
+    endif
+endfunction
+
+augroup OnlyOneFileMargin
+  autocmd!
+  autocmd VimEnter * call CenterWithMargin()
+  autocmd TabEnter * call CenterWithMargin()
+augroup END
+
+"===============================================================================
 "// Utility
 "===============================================================================
 function! s:GetVisualSelection()
