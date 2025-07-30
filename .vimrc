@@ -67,6 +67,8 @@ Plugin 'mattn/vim-lsp-settings'
 " colors
 Plugin 'altercation/vim-colors-solarized'
 
+Plugin 'DanBradbury/copilot-chat.vim'
+
 " Clang autocomplete
 "   Make sure is installed before 'ctrlp' plugin, other wise the clang_completer
 "   'make install' will place files inside ~/.vim/bundle/ctrlp.vim
