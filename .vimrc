@@ -273,7 +273,7 @@ nnoremap tterm :call OpenTerminalTab()<CR>
 " save and return to terminal tab the
 nnoremap <C-t> :wa!<Bar>tabn 1<CR>i
 nnoremap <C-s> :wa!<Bar>tabn 1<CR>i
-nnoremap <C-\> :wa!<Bar>tabn 1<CR>i
+"nnoremap <C-\> :wa!<Bar>tabn 1<CR>i
 
 ""au TabLeave * let g:lasttab = tabpagenr()
 ""nnoremap <silent> <c-l> :exe "tabn ".g:lasttab<cr>
@@ -346,9 +346,11 @@ noremap ..q :q! <CR>
 "   "let g:project_out_file = 'out'
 nnoremap .t : call RunOutputTab()<CR>
 nnoremap .s : call RunOutputSplit('h')<CR>
-nnoremap .v :call RunOutputSplit('v')<CR>
-nnoremap .c :call CloseOutputSplit()<CR>
-nnoremap .x :call CloseOutputTab()<CR>
+nnoremap .v : call RunOutputSplit('v')<CR>
+nnoremap .c : call CloseOutputSplit()<CR>
+nnoremap .x : call CloseOutputTab()<CR>
+nnoremap <C-\> : call RunOutputSplit('h')<CR>
+nnoremap <C-;> : call RunOutputSplit('h')<CR>
 
 if filereadable('.vimlocal')
   source .vimlocal
@@ -519,7 +521,10 @@ endfunction
 "===============================================================================
 "// Open file under line
 "===============================================================================
- function! OpenFileUnderLine()
+nnoremap <silent> o :call OpenFileUnderLine()<CR>
+nnoremap <silent> ; :call OpenFileUnderLine()<CR>
+
+function! OpenFileUnderLine()
   let line = getline('.')
   let current = col('.') - 1
 
@@ -599,8 +604,6 @@ endfunction
     echohl ErrorMsg | echom "No readable file: " . fullpath | echohl None
   endif
 endfunction
-
-nnoremap <silent> o :call OpenFileUnderLine()<CR>
 
 "===============================================================================
 "// Fold
