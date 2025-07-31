@@ -271,7 +271,7 @@ endif
 "// Center file
 "===============================================================================
 let g:center_margin_width = 190
-let g:center_margin_file = '/tmp/set_center.vim'
+let g:center_margin_file = '/tmp/vim_set_center.txt'
 
 function! CenterWithMargin()
     if winnr('$') == 1
