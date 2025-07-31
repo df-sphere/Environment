@@ -208,7 +208,7 @@ bind '"fd":vi-movement-mode'
 # ctrl + t or f grep file 
 
 # Default command to use when input is tty
-export FZF_DEFAULT_COMMAND="fd --type f --color=always"
+export FZF_DEFAULT_COMMAND="fd --type f --no-ignore --color=always"
 export FZF_DEFAULT_OPTS="-i --preview 'bat --style numbers,changes --decorations always --color always 2>/dev/null {} | head -500' --height 45% --layout=reverse --border --inline-info"
 export FZF_COMPLETION_TRIGGER='.'
 
@@ -217,13 +217,13 @@ export FZF_COMPLETION_TRIGGER='.'
 # - See the source code (completion.{bash,zsh}) for the details.
 # This command is called when using vim command
 _fzf_compgen_path() {
-  fd --hidden --follow --exclude ".git" . "$1" 
+  fd --no-ignore --hidden --follow --exclude ".git" . "$1" 
 }
 
 # Use fd to generate the list for directory completion
 # This command is called when using cd command 
 _fzf_compgen_dir() {
-  fd --type d --hidden --follow --exclude ".git" . "$1"
+  fd --no-ignore --type d --hidden --follow --exclude ".git" . "$1"
 }
 
 [ -f ~/.fzf.bash ] && source ~/.fzf.bash
@@ -264,6 +264,7 @@ unset __conda_setup
 # <<< conda initialize <<<
 
 #export DISPLAY="localhost:10.0"
-#export PATH=~/amrnd/bin:/usr/local/bin:$PATH
+#export PATH=~/amrnd/bin:~/amrnd/dist/clang/clang-18.1.8/bin:/usr/local/bin:$PATH
+#export LD_LIBRARY_PATH=~/amrnd/dist/clang/clang-18.1.8/lib:/usr/local/lib:/usr/local/lib64:/usr/lib64:$LD_LIBRARY_PATH
 export PATH=~/amrnd/bin:$PATH
 

@@ -119,6 +119,148 @@ filetype plugin indent on
 "===============================================================================
 
 "===============================================================================
+"// LSP
+"===============================================================================
+" to install and run:
+" 1. install clangd, can be downloaded compiled binaries from llvm website
+" 2. run plugins in this .vimrc
+" 3. no need to run :LspInstallServer clangd, if clangd is in PATH
+" 4. if you want to use clangd with cmake, run cmake with
+"    -DCMAKE_EXPORT_COMPILE_COMMANDS=ON or add to CMakeLists.txt:
+"    SET(CMAKE_EXPORT_COMPILE_COMMANDS ON), to generate compile_commands.json
+" 5. In same directory where you open vim for the project place following
+"    files:
+"    - compile_commands.json 
+"    - .vimlocal, defines the command to run the project, as explained in this
+"       .vimrc file
+"    - .clangd, needs to be created, as follows:
+"       $cat .clangd
+"       CompileFlags:
+"         Add: [-std=c++20]
+"  note: no need to run clangd in background, it will be started automatically 
+"  when needed by vim LSP client.
+
+""if executable('pylsp')
+""    " pip install python-lsp-server
+""    au User lsp_setup call lsp#register_server({
+""        \ 'name': 'pylsp',
+""        \ 'cmd': {server_info->['pylsp']},
+""        \ 'allowlist': ['python'],
+""        \ })
+""endif
+
+if executable('clangd')
+    augroup lsp_clangd
+        autocmd!
+        autocmd User lsp_setup call lsp#register_server({
+            \ 'name': 'clangd',
+            \ 'cmd': {server_info->['clangd']},
+            \ 'allowlist': ['c', 'cpp', 'objc', 'objcpp'],
+            \ })
+        autocmd FileType c setlocal omnifunc=lsp#complete
+        autocmd FileType cpp setlocal omnifunc=lsp#complete
+        autocmd FileType objc setlocal omnifunc=lsp#complete
+        autocmd FileType objcpp setlocal omnifunc=lsp#complete
+endif
+
+function! s:on_lsp_buffer_enabled() abort
+    setlocal omnifunc=lsp#complete
+    setlocal signcolumn=yes
+    if exists('+tagfunc') | setlocal tagfunc=lsp#tagfunc | endif
+    nmap <buffer> ;gd <plug>(lsp-definition)
+    nmap <buffer> ;gs <plug>(lsp-document-symbol-search)
+    nmap <buffer> ;gS <plug>(lsp-workspace-symbol-search)
+    nmap <buffer> ;gr <plug>(lsp-references)
+    nmap <buffer> ;gi <plug>(lsp-implementation)
+    nmap <buffer> ;gt <plug>(lsp-type-definition)
+    nmap <buffer> <leader>rn <plug>(lsp-rename)
+    nmap <buffer> [g <plug>(lsp-previous-diagnostic)
+    nmap <buffer> ]g <plug>(lsp-next-diagnostic)
+    nmap <buffer> ;k <plug>(lsp-hover)
+    nnoremap <buffer> <expr><c-f> lsp#scroll(+4)
+    nnoremap <buffer> <expr><c-w> lsp#scroll(-4)
+
+    let g:lsp_format_sync_timeout = 1000
+    autocmd! BufWritePre *.rs,*.go call execute('LspDocumentFormatSync')
+    
+    " refer to doc to add more commands
+endfunction
+
+augroup lsp_install
+    au!
+    " call s:on_lsp_buffer_enabled only for languages that has the server registered.
+    autocmd User lsp_buffer_enabled call s:on_lsp_buffer_enabled()
+augroup END
+
+let g:autocomplete = 1
+function! ToggleAutocomplete() abort
+    if g:autocomplete == 1
+        let g:autocomplete = 0
+        let g:autocomplete_auto_popup = 0
+        echo "disabled autocomplete"
+    else
+        let g:autocomplete = 1 
+        let g:autocomplete_auto_popup = 1 
+        echo "enabled autocomplete"
+    endif
+endfunction
+
+let g:lsp = 1
+function! ToggleLsp() abort
+    if g:lsp == 1
+        let g:lsp = 0
+        call lsp#disable()
+        echo "disabled LSP"
+    else
+        let g:lsp = 1 
+        call lsp#enable()
+        highlight link LspErrorHighlight Error
+        echo "enabled LSP"
+    endif
+endfunction
+
+function! ToggleLspDiagnostics() abort
+    if g:lsp_diagnostics_enabled == 1
+        let g:lsp_diagnostics_enabled = 0
+        call lsp#disable_diagnostics_for_buffer()
+        echo "disabled LSP diagnostics"
+    else
+        let g:lsp_diagnostics_enabled = 1 
+        call lsp#enable_diagnostics_for_buffer()
+        highlight link LspErrorHighlight Error
+        echo "enabled LSP diagnostics"
+    endif
+endfunction
+
+function! ToggleLspText() abort
+    if g:lsp_diagnostics_virtual_text_enabled = 1
+        let g:lsp_diagnostics_virtual_text_enabled = 0
+        echo "disabled LSP virtual text"
+    else
+        let g:lsp_diagnostics_virtual_text_enabled = 1 
+        highlight link LspErrorHighlight Error
+        echo "enabled LSP virtual text"
+    endif
+endfunction
+
+nnoremap \a : call ToggleAutocomplete()<CR>
+nnoremap \l : call ToggleLsp()<CR>
+nnoremap \d : call ToogleLspDiagnostics()<CR>
+nnoremap \t : call ToggleLspText()<CR>
+autocmd BufEnter * highlight link LspErrorHighlight Error
+autocmd InsertEnter * call lsp#enable_diagnostics_for_buffer()
+autocmd InsertLeave * call lsp#disabled_diagnostics_for_buffer()
+let g:lsp_diagnostics_echo_cursor = 1
+let g:lsp_diagnostics_virtual_text_enabled = 1
+let g:lsp_diagnostics_virtual_text_delay = 520 "ms
+let g:lsp_diagnostics_virtual_text_align = "after" " 'below' 
+let g:lsp_diagnostics_virtual_text_padding_left = "4" " default 1
+let g:lsp_diagnostics_virtual_text_wrap = "truncate" " 'wrap'
+let g:lsp_diagnostics_virtual_text_prefix = "---"
+nnoremap .a :LspPreviousError<CR>
+nnoremap .s :LspNextError<CR>
+
+"===============================================================================
 "// Center file
 "===============================================================================
 let g:center_margin_width = 190
@@ -1538,12 +1680,16 @@ noremap <silent> .std :call SearchStdSelection() <CR>
 ""solarized for command line, use insted guake colors
 ""http://www.webupd8.org/2011/04/solarized-must-have-color-paletter-for.html
 
-function! SetColorsOther()
+function! SetColors()
   ""set term=xterm-256color
   ""set background=light
   ""let g:solarized_use16=1
   let g:solarized_termcolors=256
+  set encoding=utf-8
   set t_Co=256
+  ""if has('termguicolors')
+  ""  set termguicolors
+  ""endif
   set background=dark
   colorscheme solarized
 
@@ -1579,12 +1725,16 @@ function! SetColorsOther()
   hi LineNr ctermfg=240
 endf
 
-function! SetColors()
+function! SetColorsBright()
   ""set term=xterm-256color
   ""set background=light
   ""let g:solarized_use16=1
   let g:solarized_termcolors=256
+  set encoding=utf-8
   set t_Co=256
+  ""if has('termguicolors')
+    ""set termguicolors
+  ""endif
   set background=dark
   colorscheme solarized
 
@@ -1627,6 +1777,16 @@ function! SetColors()
   ""hi DiffText       ctermfg=10 ctermbg=237 cterm=bold 
 endf
 
+" hover over part of the code and show what highlight group it belongs to."
+function! ColorGroupName()
+  if !exists("*synstack")
+    return
+  endif
+  echo map(synstack(line('.'), col('.')), 'synIDattr(v:val, "name")')
+endfunc
+
+nnoremap ;h :call ColorGroupName() <CR>
+
 "===============================================================================
 "// Highlight colors
 "===============================================================================
@@ -1642,22 +1802,12 @@ endf
 ""      \lo<" . synIDattr(synIDtrans(synID(line("."),col("."),1)),"name") \
 ""      \. ">"<CR>
 
-nnoremap ;h :call SynStack() <CR>
-
-" hover over part of the code and show what highlight group it belongs to."
-function! SynStack()
-  if !exists("*synstack")
-    return
-  endif
-  echo map(synstack(line('.'), col('.')), 'synIDattr(v:val, "name")')
-endfunc
-
 noremap ;sb :call SetBright() <CR>
 noremap ;sd :call SetDay() <CR>
 noremap ;sn :call SetEvening() <CR>
 
 "external file for variable definitions, g:l_<variable_name>"
-source ~/.config.vim
+source ~/.vim.global
 
 function SetColorOpen()
   if (g:l_color_type == "bright") 
@@ -1678,10 +1828,13 @@ autocmd BufWinLeave * call SetColorOpen()
 ""autocmd BufWinLeave * call SetColors() | call SetDay()
 
 function SetBright()
-  call SetColors()
-  hi Normal ctermbg=238
-  hi Normal ctermfg=255
-  hi Comment ctermfg=250
+  call SetColorsBright()
+  ""hi Normal ctermbg=238
+  ""hi Normal ctermfg=255
+  ""hi Comment ctermfg=250
+  hi Normal ctermbg=235
+  hi Normal ctermfg=7
+  hi Comment ctermfg=245
 endf
 
 function SetDay()
