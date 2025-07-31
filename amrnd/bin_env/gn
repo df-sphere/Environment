@@ -1,0 +1,3 @@
+#!/bin/sh
+
+vim -c 'source ~/.vimrc' -c 'call RunGitGd("'"${1}"'")' -c 'q'
