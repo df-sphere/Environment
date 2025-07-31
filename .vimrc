@@ -260,6 +260,13 @@ let g:lsp_diagnostics_virtual_text_prefix = "---"
 nnoremap .a :LspPreviousError<CR>
 nnoremap .s :LspNextError<CR>
 
+if &diff
+  let g:autocomplete = 0
+  let g:lsp_diagnostics_enabled = 0 
+  let g:lsp_diagnostics_virtual_text_enabled = 0
+  call lsp#disable()
+endif
+
 "===============================================================================
 "// Center file
 "===============================================================================
