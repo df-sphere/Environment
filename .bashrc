@@ -266,5 +266,5 @@ unset __conda_setup
 #export DISPLAY="localhost:10.0"
 #export PATH=~/amrnd/bin:~/amrnd/dist/clang/clang-18.1.8/bin:/usr/local/bin:$PATH
 #export LD_LIBRARY_PATH=~/amrnd/dist/clang/clang-18.1.8/lib:/usr/local/lib:/usr/local/lib64:/usr/lib64:$LD_LIBRARY_PATH
-export PATH=~/amrnd/bin:~/amrnd/bin_env:$PATH
+export PATH=~/amrnd/usr/bin:~/amrnd/usr/bin_env:$PATH
 
