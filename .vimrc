@@ -524,7 +524,8 @@ noremap ..q :q! <CR>
 " - The project directory must have .vimlocal as follows:
 "   $cat .vimlocal
 "   let g:project_run_command = './zrun.sh'
-"   "let g:project_out_file = 'out'
+"   let g:project_out_file = 'out'
+
 nnoremap .t : call RunOutputTab()<CR>
 nnoremap .s : call RunOutputSplit('h')<CR>
 nnoremap .v : call RunOutputSplit('v')<CR>
@@ -1814,7 +1815,7 @@ noremap ;sd :call SetDay() <CR>
 noremap ;sn :call SetEvening() <CR>
 
 "external file for variable definitions, g:l_<variable_name>"
-source ~/.vim.global
+source ~/.vimglobal
 
 function SetColorOpen()
   if (g:l_color_type == "bright") 
