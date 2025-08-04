@@ -245,11 +245,11 @@ endfunction
 
 nnoremap \a : call ToggleAutocomplete()<CR>
 nnoremap \l : call ToggleLsp()<CR>
-nnoremap \d : call ToogleLspDiagnostics()<CR>
+nnoremap \d : call ToggleLspDiagnostics()<CR>
 nnoremap \t : call ToggleLspText()<CR>
 autocmd BufEnter * highlight link LspErrorHighlight Error
-autocmd InsertEnter * call lsp#enable_diagnostics_for_buffer()
-autocmd InsertLeave * call lsp#disabled_diagnostics_for_buffer()
+""autocmd InsertEnter * call lsp#enable_diagnostics_for_buffer(bufnr('%'))
+""autocmd InsertLeave * call lsp#disabled_diagnostics_for_buffer(bufnr('%'))
 let g:lsp_diagnostics_echo_cursor = 1
 let g:lsp_diagnostics_virtual_text_enabled = 1
 let g:lsp_diagnostics_virtual_text_delay = 520 "ms
@@ -318,6 +318,22 @@ function! GetData()
 endfunction
 
 noremap <silent> ;a :call GetData() <CR>
+
+"===============================================================================
+"// Cgrep
+"===============================================================================
+function Cgrep()
+    let l:selection = s:GetVisualSelection()
+    exe "new | r ! cg \"".l:selection."\" . ".g:grep_lines
+endfunction
+
+function Cgrepd()
+    let l:selection = s:GetVisualSelection()
+    exe "new | r ! cgd \"".l:selection."\" . ".g:grep_lines
+endfunction
+
+noremap <silent> ;cg :call Cgrep()<CR>
+noremap <silent> ;cgd :call Cgrepd()<CR>
 
 "===============================================================================
 "// Other
@@ -413,7 +429,18 @@ nnoremap <silent> <S-w> :bnext <CR>
 " save all tabs"
 noremap ;w :wa! <CR>
 noremap ;q ;wqa! <CR>
-autocmd BufEnter * execute "wa!"
+
+function! AutoWriteIfRealFile()
+  " Only save normal, named, modified file buffers, not temp/special/term buffers
+  if &buftype ==# '' && expand('%') !=# ''              " real file
+        \ && expand('%:p') !~# '^/tmp/'
+        \ && expand('%:t') !=# 'vim_set_center.txt'
+        \ && &modified
+    silent! write
+  endif
+endfunction
+
+autocmd BufLeave * call AutoWriteIfRealFile()
 
 nnoremap .e :edit<CR>
 
@@ -706,84 +733,95 @@ endfunction
 nnoremap <silent> o :call OpenFileUnderLine()<CR>
 nnoremap <silent> ; :call OpenFileUnderLine()<CR>
 
+function! FindLoadedBufnrByFullpath(fullpath) abort
+  let canon = resolve(fnamemodify(a:fullpath, ':p'))
+  for buf in getbufinfo({'bufloaded': 1})
+    if buf['name'] !=# '' && canon ==# resolve(fnamemodify(buf['name'], ':p'))
+      return buf['bufnr']
+    endif
+  endfor
+  return -1
+endfunction
+
 function! OpenFileUnderLine()
+  " Get current line and cursor position
   let line = getline('.')
   let current = col('.') - 1
 
-  " Find the start of the path: scan left for a '/' OR stop at the first whitespace
+  " Scan left from cursor to first whitespace to find the start of the path
   let start = current
-  let found_slash = 0
-  while start >= 0
-    let char = line[start]
-    if char ==# '/' && start == 0
-      let found_slash = 1
-      break
-    elseif char =~# '\s'
-      " Only proceed if a '/' appears after this space!
-      let start += 1
-      while start < len(line) && line[start] !~# '/'
-        let start += 1
-      endwhile
-      if start < len(line) && line[start] ==# '/'
-        let found_slash = 1
-      else
-        echo "No file path with '/' found on this line"
-        return
-      endif
-      break
-    endif
+  while start >= 0 && line[start] !~# '\s'
     let start -= 1
   endwhile
+  let start += 1
 
-  if !found_slash
-    echo "No file path with '/' found on this line"
-    return
-  endif
-
-  " Now scan right from start to first whitespace (or end of line)
+  " Scan right from start to first whitespace (or end of line)
   let end = start
-  while end < len(line) && line[end] !~# '\s'
+  let len_line = len(line)
+  while end < len_line && line[end] !~# '\s'
     let end += 1
   endwhile
 
   let candidate = strpart(line, start, end - start)
 
-  " Split into path and line number
+  " Split into path and line number if format is path:lineno
   let parts = split(candidate, ':')
   let path = parts[0]
-  let lineno = (len(parts) > 1 && parts[1] =~# '^[0-9]\+$') ? str2nr(parts[1]) : 0
+  let lineno = (len(parts) > 1 && parts[1] =~# '^\d\+$') ? str2nr(parts[1]) : 0
 
-  " The path must start with '/'
-  if path !~# '^/'
-    echohl ErrorMsg | echom "Path must start with '/': " . path | echohl None
+  " Expand ~ and env vars, and resolve absolute path
+  let fullpath = resolve(fnamemodify(expand(path), ':p'))
+
+  echo "Opening file: " . fullpath . (lineno > 0 ? " at line " . lineno : "")
+
+  if !filereadable(fullpath)
+    echohl ErrorMsg | echom "No readable file: " . fullpath | echohl None
     return
   endif
 
-  " Expand ~, resolve symlinks, and make absolute
-  let fullpath = resolve(expand(path))
-
-  "echo "Opening file: " . fullpath . (lineno > 0 ? " at line " . lineno : "")
-
-  " Only proceed if file is readable
-  if filereadable(fullpath)
-    let buf = bufnr(fullpath)
-    if buf != -1
-        let win = bufwinid(buf)
-        if win != -1
-          call win_gotoid(win)
-          normal! zz
-        else
-          exec 'buffer ' . buf
-        endif
+  if &modified
+    if expand('%') == ''
+      " This buffer has no file (e.g., scratch/output), so do not prompt to save
+      " Optional: you can print a message, or just skip silently
     else
-      exec 'edit ' . fnameescape(fullpath)
+      let answer = confirm("Buffer has changes. Save?", "&Yes\n&No\n&Cancel", 1)
+      if answer == 1
+        write
+      elseif answer == 2
+        " Proceed without saving
+      else
+        echo "Aborted"
+        return
+      endif
     endif
-    if lineno > 0
-      exec lineno
-      normal! zz
+  endif
+
+  let buf = FindLoadedBufnrByFullpath(fullpath)
+
+  if buf != -1
+    " Check that the buffer has a name
+    let bufname = bufname(buf)
+    if bufname !=# ''
+      let win = bufwinid(buf)
+      if win != -1
+        call win_gotoid(win)
+        normal! zz
+      else
+        exec 'buffer ' . buf
+      endif
+      if lineno > 0
+        exec lineno
+        normal! zz
+      endif
+      return
     endif
-  else
-    echohl ErrorMsg | echom "No readable file: " . fullpath | echohl None
+  endif
+
+  " If didn't find loaded buffer, open the file
+  exec 'split! ' . fnameescape(fullpath)
+  if lineno > 0
+    exec lineno
+    normal! zz
   endif
 endfunction
 
@@ -2034,8 +2072,6 @@ silent! tunmap <CR>
 "have local_vimrc for different projects
 
 "pending"
-"- Language server
-"- cgrep
 "- run binary async and return automatically to code with status of result
 "- vim gdb instructions
 "

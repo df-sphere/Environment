@@ -1,0 +1,8 @@
+#!/bin/sh
+
+word=$1
+path=${2:-"."}
+lines=${3:-0}    # Default to 0 if not provided
+
+grep -rin -C ${lines} --include \*.hpp --include \*.h --include \*.cpp --include \*.c -e ${word} ${path} 
+

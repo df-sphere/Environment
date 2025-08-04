@@ -1,0 +1,12 @@
+#!/bin/sh
+
+word=$1
+path=${2:-"."}
+lines=${3:-0}    # Default to 0 if not provided
+
+#grep -rn -C ${lines} --include \*.hpp --include \*.h --include \*.H --include \*.cpp --include \*.c --include \*.C  -e "[[:space:]]*[a-zA-Z_][a-zA-Z0-9_].*${word}.*[={;]" ${path} 
+grep -rnP -C ${lines} \
+  --include \*.hpp --include \*.h --include \*.cpp --include \*.c \
+  "[[:space:]]*[a-zA-Z_][a-zA-Z0-9_:<>, ]*([[:space:]]+(const|constexpr|volatile))*[[:space:]]*[*&]*[[:space:]]+${word}([[:space:]=,{,(])" \
+  ${path}
+

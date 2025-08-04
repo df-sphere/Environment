@@ -1,3 +1,4 @@
 let g:l_color_type = "n"
 let g:l_color_type = "bright"
+let g:grep_lines = 0 
 
