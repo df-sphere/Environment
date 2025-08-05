@@ -1,0 +1,2 @@
+let g:project_run_command = './zrun.sh'
+let g:project_out_file = 'out'
