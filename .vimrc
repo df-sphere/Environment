@@ -2072,6 +2072,7 @@ silent! tunmap <CR>
 "have local_vimrc for different projects
 
 "pending"
+"- cg/cgd open definition in an alredy opened tab if it exists
 "- run binary async and return automatically to code with status of result
 "- vim gdb instructions
-"
+
