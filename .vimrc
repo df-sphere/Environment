@@ -133,7 +133,7 @@ filetype plugin indent on
 "    - compile_commands.json 
 "    - .vimlocal, defines the command to run the project, as explained in this
 "       .vimrc file
-"    - .clangd, needs to be created, as follows:
+"    - .clangd, needs to be created, as follows (check ~/.clangd):
 "       $cat .clangd
 "       CompileFlags:
 "         Add: [-std=c++20]
