@@ -1290,6 +1290,11 @@ let g:ctrlp_max_depth=40
 "===============================================================================
 "// Nerd tree, opens file directory, type CTRL + a
 "===============================================================================
+" open file <enter>
+" open files with "o" and "i" to open in vertical and horizontal split
+" new tab "to"
+" "r" refreshes the directory in case new files were added/removed
+
 let g:NERDTreeWinSize=20
 
 " close nerd tree if it is the last window to opened"
@@ -1298,8 +1303,7 @@ autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") &&
 
 map <silent> <C-a> :NERDTreeToggle<CR>
 
-" open file in a new tab, 'Shift + o'
-let NERDTreeMapOpenInTab='<S-o>'
+let NERDTreeMapOpenInTab='to'
 
 "===============================================================================
 "// Open test files, type CTRL + x. Opens .h and .cpp when in _test.cpp, and opens
